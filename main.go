@@ -17,7 +17,7 @@ var (
 	configForce            bool   = false
 	configDebug            bool   = false
 	configDockerconfigjson string = ""
-	configSecretName       string = "gcr-cred-secret" // default to gcr-cred-secret
+	configSecretName       string = "image-pull-secret" // default to image-pull-secret
 )
 
 type k8sClient struct {
@@ -28,8 +28,7 @@ func main() {
 	// parse flags
 	flag.BoolVar(&configForce, "force", LookUpEnvOrBool("CONFIG_FORCE", configForce), "force to overwrite secrets when not match")
 	flag.BoolVar(&configDebug, "debug", LookUpEnvOrBool("CONFIG_DEBUG", configDebug), "show DEBUG logs")
-	flag.StringVar(&configDockerconfigjson, "dockerconfigjson", LookupEnvOrString("CONFIG_DOCKERCONFIGJSON", configDockerconfigjson),
-		"json key for authenicating google container registry, refer to https://cloud.google.com/container-registry/docs/advanced-authentication#json_key_file")
+	flag.StringVar(&configDockerconfigjson, "dockerconfigjson", LookupEnvOrString("CONFIG_DOCKERCONFIGJSON", configDockerconfigjson), "json credential for authenicating container registry")
 	flag.StringVar(&configSecretName, "secretname", LookupEnvOrString("CONFIG_SECRETNAME", configSecretName), "set name of managed secrets")
 	flag.Parse()
 

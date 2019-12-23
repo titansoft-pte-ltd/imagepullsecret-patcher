@@ -17,6 +17,6 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build
 # final stage
 FROM scratch
 
-COPY --from=builder /app/gcr-cred-patcher /app/
+COPY --from=builder /app/imagepullsecret-patcher /app/
 
 ENTRYPOINT ["/app/imagepullsecret-patcher"]

@@ -11,7 +11,7 @@ func dockerconfigSecret(namespace string) *corev1.Secret {
 			Name:      configSecretName,
 			Namespace: namespace,
 			Annotations: map[string]string{
-				"app.kubernetes.io/managed-by": "gcr-cred-patcher",
+				"app.kubernetes.io/managed-by": "imagepullsecret-patcher",
 			},
 		},
 		Data: map[string][]byte{
@@ -24,7 +24,7 @@ func dockerconfigSecret(namespace string) *corev1.Secret {
 type verifySecretResult string
 
 const (
-	// error code for verifySecret
+	// result code for verifySecret
 	secretOk           verifySecretResult = "SecretOk"
 	secretWrongType    verifySecretResult = "SecretWrongType"
 	secretNoKey        verifySecretResult = "SecretNoKey"

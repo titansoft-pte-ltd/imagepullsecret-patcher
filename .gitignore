@@ -4,7 +4,7 @@
 *.dll
 *.so
 *.dylib
-gcr-cred-patcher
+imagepullsecret-patcher
 
 # Test binary, built with `go test -c`
 *.test
