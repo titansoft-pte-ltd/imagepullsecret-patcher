@@ -4,7 +4,7 @@ Create and patch image pull secret to all namespaces in Kubernetes cluster.
 
 ## Installation and configuration
 
-To install imagepullsecret-patcher, can refer to deploy-example as a quick-start. 
+To install imagepullsecret-patcher, can refer to [deploy-example](deploy-example) as a quick-start. 
 
 Below is a table of available configurations:
 
