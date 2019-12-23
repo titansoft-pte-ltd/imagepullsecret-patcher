@@ -27,7 +27,7 @@ With the second approach, Pods without a imagePullSecret in the spec will automa
 
 The imagepullsecret-patcher does two things: create a secret called `image-pull-secret` in all namespaces, and patch the `default` service accounts to use those secrets as imagePullSecrets.
 
-![flowchart](doc/GCR-CRED-PATCHER-v1.x.png)
+![flowchart](doc/IMAGEPULLSECRET-PATCHER-v0.x.png)
 
 ## Contribute
 
