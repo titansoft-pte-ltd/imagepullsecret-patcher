@@ -128,7 +128,7 @@ func runTestCase(t *testing.T, testName string, tc testCase) {
 		clientset: fake.NewSimpleClientset(),
 	}
 
-	// run preperation steps
+	// run preparation steps
 	for _, step := range tc.prepSteps {
 		if err := step(k8s); err != nil {
 			t.Errorf("%s(%s) failed during preparation: %v", testName, tc.name, err)
