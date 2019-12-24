@@ -27,7 +27,7 @@ spec:
       serviceAccountName: imagepullsecret-patcher
       containers:
       - name: imagepullsecret-patcher
-        image: "docker.pkg.github.com/titansoft-pte-ltd/imagepullsecret-patcher:latest"
+        image: "docker.pkg.github.com/titansoft-pte-ltd/imagepullsecret-patcher/release:v0.3"
         env:
           - name: CONFIG_FORCE
             value: "true"
