@@ -1,5 +1,7 @@
 # imagepullsecret-patcher
 
+[![Build Status](https://travis-ci.org/titansoft-pte-ltd/imagepullsecret-patcher.svg?branch=master)](https://travis-ci.org/titansoft-pte-ltd/imagepullsecret-patcher)
+
 Create and patch image pull secret to all namespaces in Kubernetes cluster.
 
 ![screenshot](doc/screenshot.png)
