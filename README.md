@@ -19,11 +19,28 @@ Below is a table of available configurations:
 
 ## Why
 
-In order to access the private registries, we need to provide the credential in either
+To deploy private images to Kubernetes, we need to provide the credential to the private docker registries in either
 - Pod definition (https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod)
 - Default service account in a namespace (https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#add-imagepullsecrets-to-a-service-account)
 
-With the second approach, Pods without a imagePullSecret in the spec will automatically inherit those from the default service account in its namespace. We don't want developers to specify that in every single Pod they create.
+With the second approach, a Kubernetes cluster admin configures the default service accounts in each namespace, and a Pod deployed by developers automatically inherits the image-pull-secret from the default service account in Pod's namespace. 
+
+This is done manually by following command for each Kubernetes namespace.
+
+```
+kubectl create secret docker-registry image-pull-secret \
+  -n <your-namespace> \
+  --docker-server=<your-registry-server> \
+  --docker-username=<your-name> \
+  --docker-password=<your-pword> \
+  --docker-email=<your-email>
+
+kubectl patch serviceaccount default \
+  -p "{\"imagePullSecrets\": [{\"name\": \"image-pull-secret\"}]}" \
+  -n <your-namespace>
+```
+
+And it could be automated with a simple program like imagepullsecret-patcher.
 
 ## How
 
