@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	configForce            bool   = false
+	configForce            bool   = true
 	configDebug            bool   = false
 	configDockerconfigjson string = ""
 	configSecretName       string = "image-pull-secret" // default to image-pull-secret
