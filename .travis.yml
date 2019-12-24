@@ -25,7 +25,5 @@ jobs:
         - IMAGE_NAME=docker.pkg.github.com/titansoft-pte-ltd/imagepullsecret-patcher/release
       script: 
         - docker login -u $GITHUB_USER -p $GITHUB_TOKEN docker.pkg.github.com
-        - docker build -t $IMAGE_NAME .
-        - docker push $IMAGE_NAME 
-        - docker tag $IMAGE_NAME $IMAGE_NAME:$TRAVIS_BRANCH
-        - docker push $IMAGE_NAME:$TRAVIS_BRANCH
+        - docker build -t $IMAGE_NAME:$TRAVIS_TAG .
+        - docker push $IMAGE_NAME:$TRAVIS_TAG
