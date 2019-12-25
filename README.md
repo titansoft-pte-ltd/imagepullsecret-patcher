@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/titansoft-pte-ltd/imagepullsecret-patcher.svg?branch=master)](https://travis-ci.org/titansoft-pte-ltd/imagepullsecret-patcher)
 [![Go Report Card](https://goreportcard.com/badge/github.com/titansoft-pte-ltd/imagepullsecret-patcher)](https://goreportcard.com/report/github.com/titansoft-pte-ltd/imagepullsecret-patcher)
 
-A simple Kubernetes go-client application that creates and patches imagePullSecrets to default service accounts in all Kubernetes namespaces to allow cluster-wide authenticated access to private container registry.
+A simple Kubernetes [client-go](https://github.com/kubernetes/client-go) application that creates and patches imagePullSecrets to default service accounts in all Kubernetes namespaces to allow cluster-wide authenticated access to private container registry.
 
 ![screenshot](doc/screenshot.png)
 
