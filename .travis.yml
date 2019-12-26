@@ -22,8 +22,8 @@ jobs:
     - stage: build
       if: tag IS present
       env: 
-        - IMAGE_NAME=docker.pkg.github.com/titansoft-pte-ltd/imagepullsecret-patcher/release
+        - IMAGE_NAME=quay.io/titansoft/imagepullsecret-patcher
       script: 
-        - docker login -u $GITHUB_USER -p $GITHUB_TOKEN docker.pkg.github.com
+        - docker login -u $QUAY_IO_ACCOUNT -p $QUAY_IO_TOKEN quay.io
         - docker build -t $IMAGE_NAME:$TRAVIS_TAG .
         - docker push $IMAGE_NAME:$TRAVIS_TAG
