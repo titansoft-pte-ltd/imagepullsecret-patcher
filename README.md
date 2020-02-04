@@ -5,9 +5,11 @@
 ![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/titansoft-pte-ltd/imagepullsecret-patcher)
 ![GitHub issues](https://img.shields.io/github/issues/titansoft-pte-ltd/imagepullsecret-patcher)
 
-A simple Kubernetes [client-go](https://github.com/kubernetes/client-go) application that creates and patches imagePullSecrets to default service accounts in all Kubernetes namespaces to allow cluster-wide authenticated access to private container registry.
+A simple Kubernetes [client-go](https://github.com/kubernetes/client-go) application that creates and patches imagePullSecrets to service accounts in all Kubernetes namespaces to allow cluster-wide authenticated access to private container registry.
 
 ![screenshot](doc/screenshot.png)
+
+A blog post: https://medium.com/titansoft-engineering/kubernetes-cluster-wide-access-to-private-container-registry-with-imagepullsecret-patcher-b8b8fb79f7e5
 
 ## Installation and configuration
 
@@ -19,6 +21,7 @@ Below is a table of available configurations:
 |-|-|-|-|-|
 | force | CONFIG_FORCE | -force | true | overwrite secrets when not match |
 | debug | CONFIG_DEBUG | -debug | false | show DEBUG logs |
+| all service account | CONFIG_ALLSERVICEACCOUNT | -allserviceaccount | false | if false, patch just default service account; if true, list and patch all service accounts |
 | dockerconfigjson | CONFIG_DOCKERCONFIGJSON | -dockerconfigjson | "" | json credential for authenicating container registry |
 | secret name | CONFIG_SECRETNAME | -secretname | "image-pull-secret" | name of managed secrets |
 
@@ -46,12 +49,6 @@ kubectl patch serviceaccount default \
 ```
 
 And it could be automated with a simple program like imagepullsecret-patcher.
-
-## How
-
-The imagepullsecret-patcher does two things: create a secret called `image-pull-secret` in all namespaces, and patch the `default` service accounts to use those secrets as imagePullSecrets.
-
-![flowchart](doc/IMAGEPULLSECRET-PATCHER-v0.x.png)
 
 ## Contribute
 

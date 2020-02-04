@@ -14,10 +14,11 @@ import (
 )
 
 var (
-	configForce            bool   = true
-	configDebug            bool   = false
-	configDockerconfigjson string = ""
-	configSecretName       string = "image-pull-secret" // default to image-pull-secret
+	configForce             bool   = true
+	configDebug             bool   = false
+	configAllServiceAccount bool   = false
+	configDockerconfigjson  string = ""
+	configSecretName        string = "image-pull-secret" // default to image-pull-secret
 )
 
 type k8sClient struct {
@@ -28,6 +29,7 @@ func main() {
 	// parse flags
 	flag.BoolVar(&configForce, "force", LookUpEnvOrBool("CONFIG_FORCE", configForce), "force to overwrite secrets when not match")
 	flag.BoolVar(&configDebug, "debug", LookUpEnvOrBool("CONFIG_DEBUG", configDebug), "show DEBUG logs")
+	flag.BoolVar(&configAllServiceAccount, "allserviceaccount", LookUpEnvOrBool("CONFIG_ALLSERVICEACCOUNT", configAllServiceAccount), "if false, patch just default service account; if true, list and patch all service accounts")
 	flag.StringVar(&configDockerconfigjson, "dockerconfigjson", LookupEnvOrString("CONFIG_DOCKERCONFIGJSON", configDockerconfigjson), "json credential for authenicating container registry")
 	flag.StringVar(&configSecretName, "secretname", LookupEnvOrString("CONFIG_SECRETNAME", configSecretName), "set name of managed secrets")
 	flag.Parse()
@@ -120,22 +122,28 @@ func processSecret(k8s *k8sClient, namespace string) error {
 }
 
 func processServiceAccount(k8s *k8sClient, namespace string) error {
-	sa, err := k8s.clientset.CoreV1().ServiceAccounts(namespace).Get(defaultServiceAccountName, metav1.GetOptions{})
+	sas, err := k8s.clientset.CoreV1().ServiceAccounts(namespace).List(metav1.ListOptions{})
 	if err != nil {
-		return fmt.Errorf("[%s] Failed to get service account [%s]: %v", namespace, defaultServiceAccountName, err)
+		return fmt.Errorf("[%s] Failed to list service accounts: %v", namespace, err)
 	}
-	if includeImagePullSecret(sa, configSecretName) {
-		log.Debugf("[%s] ImagePullSecrets found", namespace)
-		return nil
+	for _, sa := range sas.Items {
+		if !configAllServiceAccount && sa.Name != defaultServiceAccountName {
+			log.Debugf("[%s] Skip non-default service account [%s]", namespace, sa.Name)
+			continue
+		}
+		if includeImagePullSecret(&sa, configSecretName) {
+			log.Debugf("[%s] ImagePullSecrets found", namespace)
+			continue
+		}
+		patch, err := getPatchString(&sa, configSecretName)
+		if err != nil {
+			return fmt.Errorf("[%s] Failed to get patch string: %v", namespace, err)
+		}
+		_, err = k8s.clientset.CoreV1().ServiceAccounts(namespace).Patch(sa.Name, types.StrategicMergePatchType, patch)
+		if err != nil {
+			return fmt.Errorf("[%s] Failed to patch imagePullSecrets to service account [%s]: %v", namespace, sa.Name, err)
+		}
+		log.Infof("[%s] Patched imagePullSecrets to service account [%s]", namespace, sa.Name)
 	}
-	patch, err := getPatchString(sa, configSecretName)
-	if err != nil {
-		return fmt.Errorf("[%s] Failed to get patch string: %v", namespace, err)
-	}
-	_, err = k8s.clientset.CoreV1().ServiceAccounts(namespace).Patch(defaultServiceAccountName, types.StrategicMergePatchType, patch)
-	if err != nil {
-		return fmt.Errorf("[%s] Failed to patch imagePullSecrets to service account [%s]: %v", namespace, defaultServiceAccountName, err)
-	}
-	log.Infof("[%s] Patched imagePullSecrets to service account [%s]", namespace, defaultServiceAccountName)
 	return nil
 }

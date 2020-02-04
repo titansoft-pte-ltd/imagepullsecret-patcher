@@ -65,36 +65,60 @@ var testCasesProcessServiceAccount = []testCase{
 	{
 		name: "no image pull secret",
 		prepSteps: []step{
-			helperCreateServiceAccountWithoutImagePullSecret,
-			assertHasError(assertHasImagePullSecret(configSecretName)),
+			helperCreateServiceAccountWithoutImagePullSecret(defaultServiceAccountName),
+			assertHasError(assertHasImagePullSecret(configSecretName, defaultServiceAccountName)),
 		},
 		testSteps: []step{
 			processServiceAccountDefault,
-			assertHasImagePullSecret(configSecretName),
+			assertHasImagePullSecret(configSecretName, defaultServiceAccountName),
 		},
 	},
 	{
 		name: "has same image pull secret",
 		prepSteps: []step{
-			helperCreateServiceAccountWithImagePullSecret(configSecretName),
-			assertHasImagePullSecret(configSecretName),
+			helperCreateServiceAccountWithImagePullSecret(configSecretName, defaultServiceAccountName),
+			assertHasImagePullSecret(configSecretName, defaultServiceAccountName),
 		},
 		testSteps: []step{
 			processServiceAccountDefault,
-			assertHasImagePullSecret(configSecretName),
+			assertHasImagePullSecret(configSecretName, defaultServiceAccountName),
 		},
 	},
 	{
 		name: "has different image pull secret",
 		prepSteps: []step{
-			helperCreateServiceAccountWithImagePullSecret("other-secret"),
-			assertHasImagePullSecret("other-secret"),
-			assertHasError(assertHasImagePullSecret(configSecretName)),
+			helperCreateServiceAccountWithImagePullSecret("other-secret", defaultServiceAccountName),
+			assertHasImagePullSecret("other-secret", defaultServiceAccountName),
+			assertHasError(assertHasImagePullSecret(configSecretName, defaultServiceAccountName)),
 		},
 		testSteps: []step{
 			processServiceAccountDefault,
-			assertHasImagePullSecret("other-secret"),
-			assertHasImagePullSecret(configSecretName),
+			assertHasImagePullSecret("other-secret", defaultServiceAccountName),
+			assertHasImagePullSecret(configSecretName, defaultServiceAccountName),
+		},
+	},
+	{
+		name: "non-default service account - skip when allServiceAccount off",
+		prepSteps: []step{
+			helperAllServiceAccountOff,
+			helperCreateServiceAccountWithoutImagePullSecret("other-service-account"),
+			assertHasError(assertHasImagePullSecret(configSecretName, "other-service-account")),
+		},
+		testSteps: []step{
+			processServiceAccountDefault,
+			assertHasError(assertHasImagePullSecret(configSecretName, "other-service-account")),
+		},
+	},
+	{
+		name: "non-default service account - patch when allServiceAccount on",
+		prepSteps: []step{
+			helperAllServiceAccountOn,
+			helperCreateServiceAccountWithoutImagePullSecret("other-service-account"),
+			assertHasError(assertHasImagePullSecret(configSecretName, "other-service-account")),
+		},
+		testSteps: []step{
+			processServiceAccountDefault,
+			assertHasImagePullSecret(configSecretName, "other-service-account"),
 		},
 	},
 }
@@ -170,21 +194,23 @@ func helperCreateOpaqueSecret(k8s *k8sClient) error {
 	return err
 }
 
-func helperCreateServiceAccountWithoutImagePullSecret(k8s *k8sClient) error {
-	_, err := k8s.clientset.CoreV1().ServiceAccounts(v1.NamespaceDefault).Create(&v1.ServiceAccount{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      defaultServiceAccountName,
-			Namespace: v1.NamespaceDefault,
-		},
-	})
-	return err
-}
-
-func helperCreateServiceAccountWithImagePullSecret(secretName string) step {
+func helperCreateServiceAccountWithoutImagePullSecret(serviceAccountName string) step {
 	return func(k8s *k8sClient) error {
 		_, err := k8s.clientset.CoreV1().ServiceAccounts(v1.NamespaceDefault).Create(&v1.ServiceAccount{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      defaultServiceAccountName,
+				Name:      serviceAccountName,
+				Namespace: v1.NamespaceDefault,
+			},
+		})
+		return err
+	}
+}
+
+func helperCreateServiceAccountWithImagePullSecret(secretName, serviceAccountName string) step {
+	return func(k8s *k8sClient) error {
+		_, err := k8s.clientset.CoreV1().ServiceAccounts(v1.NamespaceDefault).Create(&v1.ServiceAccount{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      serviceAccountName,
 				Namespace: v1.NamespaceDefault,
 			},
 			ImagePullSecrets: []v1.LocalObjectReference{
@@ -204,6 +230,16 @@ func helperForceOn(_ *k8sClient) error {
 
 func helperForceOff(_ *k8sClient) error {
 	configForce = false
+	return nil
+}
+
+func helperAllServiceAccountOn(_ *k8sClient) error {
+	configAllServiceAccount = true
+	return nil
+}
+
+func helperAllServiceAccountOff(_ *k8sClient) error {
+	configAllServiceAccount = false
 	return nil
 }
 
@@ -250,9 +286,9 @@ func assertHasError(fn step) step {
 	}
 }
 
-func assertHasImagePullSecret(secretName string) step {
+func assertHasImagePullSecret(secretName, serviceAccountName string) step {
 	return func(k8s *k8sClient) error {
-		sa, err := k8s.clientset.CoreV1().ServiceAccounts(v1.NamespaceDefault).Get(defaultServiceAccountName, metav1.GetOptions{})
+		sa, err := k8s.clientset.CoreV1().ServiceAccounts(v1.NamespaceDefault).Get(serviceAccountName, metav1.GetOptions{})
 		if err != nil {
 			return err
 		}
