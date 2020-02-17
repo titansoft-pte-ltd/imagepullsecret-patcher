@@ -177,6 +177,51 @@ func processServiceAccountDefault(k8s *k8sClient) error {
 	return processServiceAccount(k8s, v1.NamespaceDefault)
 }
 
+func TestNamespaceIsExcluded(t *testing.T) {
+	for _, tc := range []struct {
+		name      string
+		config    string
+		namespace corev1.Namespace
+		expected  bool
+	}{
+		{
+			name:   "empty config",
+			config: "",
+			namespace: corev1.Namespace{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "kube-system",
+				},
+			},
+			expected: false,
+		},
+		{
+			name:   "appear in config",
+			config: "kube-system,other-namespace",
+			namespace: corev1.Namespace{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "kube-system",
+				},
+			},
+			expected: true,
+		},
+		{
+			name:   "not appear in config",
+			config: "default,other-namespace",
+			namespace: corev1.Namespace{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "kube-system",
+				},
+			},
+			expected: false,
+		},
+	} {
+		configExcludedNamespaces = tc.config
+		if actual := namespaceIsExcluded(tc.namespace); actual != tc.expected {
+			t.Errorf("TestNamespaceIsExcluded(%s) failed: expected %v, got %v", tc.name, tc.expected, actual)
+		}
+	}
+}
+
 // a set of helper functions
 func helperCreateValidSecret(k8s *k8sClient) error {
 	_, err := k8s.clientset.CoreV1().Secrets(v1.NamespaceDefault).Create(dockerconfigSecret(v1.NamespaceDefault))

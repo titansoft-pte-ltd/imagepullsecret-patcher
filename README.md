@@ -24,6 +24,7 @@ Below is a table of available configurations:
 | all service account | CONFIG_ALLSERVICEACCOUNT | -allserviceaccount | false | if false, patch just default service account; if true, list and patch all service accounts |
 | dockerconfigjson | CONFIG_DOCKERCONFIGJSON | -dockerconfigjson | "" | json credential for authenicating container registry |
 | secret name | CONFIG_SECRETNAME | -secretname | "image-pull-secret" | name of managed secrets |
+| excluded namespaces | CONFIG_EXCLUDED_NAMESPACES | -excluded-namespaces | "" | comma-separated namespaces excluded from processing |
 
 ## Why
 

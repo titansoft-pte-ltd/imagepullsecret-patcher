@@ -3,9 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -14,11 +16,12 @@ import (
 )
 
 var (
-	configForce             bool   = true
-	configDebug             bool   = false
-	configAllServiceAccount bool   = false
-	configDockerconfigjson  string = ""
-	configSecretName        string = "image-pull-secret" // default to image-pull-secret
+	configForce              bool   = true
+	configDebug              bool   = false
+	configAllServiceAccount  bool   = false
+	configDockerconfigjson   string = ""
+	configSecretName         string = "image-pull-secret" // default to image-pull-secret
+	configExcludedNamespaces string = ""
 )
 
 type k8sClient struct {
@@ -32,6 +35,7 @@ func main() {
 	flag.BoolVar(&configAllServiceAccount, "allserviceaccount", LookUpEnvOrBool("CONFIG_ALLSERVICEACCOUNT", configAllServiceAccount), "if false, patch just default service account; if true, list and patch all service accounts")
 	flag.StringVar(&configDockerconfigjson, "dockerconfigjson", LookupEnvOrString("CONFIG_DOCKERCONFIGJSON", configDockerconfigjson), "json credential for authenicating container registry")
 	flag.StringVar(&configSecretName, "secretname", LookupEnvOrString("CONFIG_SECRETNAME", configSecretName), "set name of managed secrets")
+	flag.StringVar(&configExcludedNamespaces, "excluded-namespaces", LookupEnvOrString("CONFIG_EXCLUDED_NAMESPACES", configExcludedNamespaces), "comma-separated namespaces excluded from processing")
 	flag.Parse()
 
 	// setup logrus
@@ -70,6 +74,10 @@ func loop(k8s *k8sClient) {
 
 	for _, ns := range namespaces.Items {
 		namespace := ns.Name
+		if namespaceIsExcluded(ns) {
+			log.Infof("[%s] Namespace skipped", namespace)
+			continue
+		}
 		log.Debugf("[%s] Start processing", namespace)
 		// for each namespace, make sure the dockerconfig secret exists
 		err = processSecret(k8s, namespace)
@@ -84,6 +92,15 @@ func loop(k8s *k8sClient) {
 			log.Error(err)
 		}
 	}
+}
+
+func namespaceIsExcluded(ns corev1.Namespace) bool {
+	for _, ex := range strings.Split(configExcludedNamespaces, ",") {
+		if ex == ns.Name {
+			return true
+		}
+	}
+	return false
 }
 
 func processSecret(k8s *k8sClient, namespace string) error {
