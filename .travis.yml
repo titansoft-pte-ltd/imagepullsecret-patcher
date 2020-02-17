@@ -18,8 +18,14 @@ stages:
 jobs:
   include:
     - stage: test
+      name: Test and Benchmark
       script: go test --bench --benchmem -v
+    - stage: test
+      name: Codecov Report
+      script: go test -race -coverprofile=coverage.txt -covermode=atomic
+      after_success: bash <(curl -s https://codecov.io/bash)
     - stage: build
+      name: Quay.io
       if: tag IS present
       env: 
         - IMAGE_NAME=quay.io/titansoft/imagepullsecret-patcher
