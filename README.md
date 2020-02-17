@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.org/titansoft-pte-ltd/imagepullsecret-patcher.svg?branch=master)](https://travis-ci.org/titansoft-pte-ltd/imagepullsecret-patcher)
 [![Go Report Card](https://goreportcard.com/badge/github.com/titansoft-pte-ltd/imagepullsecret-patcher)](https://goreportcard.com/report/github.com/titansoft-pte-ltd/imagepullsecret-patcher)
+![Codecov](https://img.shields.io/codecov/c/github/titansoft-pte-ltd/imagepullsecret-patcher)
 ![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/titansoft-pte-ltd/imagepullsecret-patcher)
 ![GitHub issues](https://img.shields.io/github/issues/titansoft-pte-ltd/imagepullsecret-patcher)
 
