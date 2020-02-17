@@ -24,6 +24,10 @@ var (
 	configExcludedNamespaces string = ""
 )
 
+const (
+	annotationImagepullsecretPatcherExclude = "k8s.titansoft.com/imagepullsecret-patcher-exclude"
+)
+
 type k8sClient struct {
 	clientset kubernetes.Interface
 }
@@ -95,6 +99,10 @@ func loop(k8s *k8sClient) {
 }
 
 func namespaceIsExcluded(ns corev1.Namespace) bool {
+	v, ok := ns.Annotations[annotationImagepullsecretPatcherExclude]
+	if ok && v == "true" {
+		return true
+	}
 	for _, ex := range strings.Split(configExcludedNamespaces, ",") {
 		if ex == ns.Name {
 			return true

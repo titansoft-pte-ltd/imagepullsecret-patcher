@@ -214,6 +214,19 @@ func TestNamespaceIsExcluded(t *testing.T) {
 			},
 			expected: false,
 		},
+		{
+			name:   "namespace has annotation true",
+			config: "",
+			namespace: corev1.Namespace{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "kube-system",
+					Annotations: map[string]string{
+						"k8s.titansoft.com/imagepullsecret-patcher-exclude": "true",
+					},
+				},
+			},
+			expected: true,
+		},
 	} {
 		configExcludedNamespaces = tc.config
 		if actual := namespaceIsExcluded(tc.namespace); actual != tc.expected {

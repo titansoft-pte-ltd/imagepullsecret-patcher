@@ -26,6 +26,12 @@ Below is a table of available configurations:
 | secret name | CONFIG_SECRETNAME | -secretname | "image-pull-secret" | name of managed secrets |
 | excluded namespaces | CONFIG_EXCLUDED_NAMESPACES | -excluded-namespaces | "" | comma-separated namespaces excluded from processing |
 
+And here are the annotations available:
+
+| Annotation | Object | Description |
+|-|-|-|
+| k8s.titansoft.com/imagepullsecret-patcher-exclude | namespace | If a namespace is set this annoation with "true", it will be excluded from processing by imagepullsecret-patcher. |
+
 ## Why
 
 To deploy private images to Kubernetes, we need to provide the credential to the private docker registries in either
