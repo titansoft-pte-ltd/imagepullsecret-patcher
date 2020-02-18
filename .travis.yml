@@ -1,35 +1,39 @@
 language: go
 
 go:
-  - 1.13
+- 1.13
 
 services:
-  - docker
+- docker
 
 env:
-  - GO111MODULE=on
+- GO111MODULE=on
 
 install: true
 
 stages:
-  - test
-  - build
+- test
+- build
 
 jobs:
   include:
-    - stage: test
-      name: Test and Benchmark
-      script: go test --bench --benchmem -v
-    - stage: test
-      name: Codecov Report
-      script: go test -race -coverprofile=coverage.txt -covermode=atomic
-      after_success: bash <(curl -s https://codecov.io/bash)
-    - stage: build
-      name: Quay.io
-      if: tag IS present
-      env: 
-        - IMAGE_NAME=quay.io/titansoft/imagepullsecret-patcher
-      script: 
-        - docker login -u $QUAY_IO_ACCOUNT -p $QUAY_IO_TOKEN quay.io
-        - docker build -t $IMAGE_NAME:$TRAVIS_TAG .
-        - docker push $IMAGE_NAME:$TRAVIS_TAG
+  - stage: test
+    name: Test and Benchmark
+    script: go test --bench --benchmem -v
+  - stage: test
+    name: Codecov Report
+    script: go test -race -coverprofile=coverage.txt -covermode=atomic
+    after_success: bash <(curl -s https://codecov.io/bash)
+  - stage: build
+    name: Quay.io
+    if: tag IS present
+    env:
+    - IMAGE_NAME=quay.io/titansoft/imagepullsecret-patcher
+    script:
+    - docker login -u $QUAY_IO_ACCOUNT -p $QUAY_IO_TOKEN quay.io
+    - docker build -t $IMAGE_NAME:$TRAVIS_TAG .
+    - docker push $IMAGE_NAME:$TRAVIS_TAG
+
+notifications:
+  slack:
+    secure: NOfjz0lfVdO9Z9nSIlF9hXpy5pEIL6G4Haufeyljl1qpYEQGNydlWm5jgXdK73dFdg88QXvK/IrEOW1Wp4HCbnAfcfglgTXNu0iki9Ovs9P19b6E8KTyAZjp+wLIsFT5HdlCUbPkB2oaVMT9eld+2d1k+LL+a2WyhhYrDzRia4TlPeqf8OPjuHxx+7Zy421rRLubGL+BT8rSsM6BJk2gUzTLTKsV4LFxkZsL5km7Jaa8X7fyJEC3bobyHWCWG2ksUIwzw4D2yLzqRoQMjZWl40v6mmOg88+x/ECDiLPVAUSu5Phq9/ZfuOwzxrdJ969q7zJEa3s+3UHbaW6Bx6GcKzBhI++7bU0kfTQXhPbI26jPt110r5nbbTVIJLygdbJ56UEeCF+9CgHjZtQwyrxzrSNglbmbC2y1fhnGYmp5aZEcG6US9GmqFPDksf79bA7xg2tRlBgmYqVCuTVN8IUlWDzNz0I4WRHHGVQjKqp6UvvmNSFBrCVuTVFuiBnEk48XA2U9OdRaVL5hRtjzK/dJyxgCe1cbVxALs9NgiRG0gaqxnyht2jKjc3hEJtnyYV/xjmEadJodtc9jMDZ6Ywf+pN7L2WCKiFFbHFq/KtRzpe0PnWPtnoJOFTFQ4K/fvaD2Kp8un6eS2F5sFDKEcWjYFFdrZ1mdYWfYaolzsNDKk+k=
