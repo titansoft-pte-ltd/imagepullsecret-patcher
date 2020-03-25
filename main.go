@@ -16,12 +16,13 @@ import (
 )
 
 var (
-	configForce              bool   = true
-	configDebug              bool   = false
-	configAllServiceAccount  bool   = false
-	configDockerconfigjson   string = ""
-	configSecretName         string = "image-pull-secret" // default to image-pull-secret
-	configExcludedNamespaces string = ""
+	configForce                 bool   = true
+	configDebug                 bool   = false
+	configAllServiceAccount     bool   = false
+	configDockerconfigjson      string = ""
+	configSecretName            string = "image-pull-secret" // default to image-pull-secret
+	configExcludedNamespaces    string = ""
+	configDefaultServiceAccount string = defaultServiceAccountName
 )
 
 const (
@@ -40,6 +41,7 @@ func main() {
 	flag.StringVar(&configDockerconfigjson, "dockerconfigjson", LookupEnvOrString("CONFIG_DOCKERCONFIGJSON", configDockerconfigjson), "json credential for authenicating container registry")
 	flag.StringVar(&configSecretName, "secretname", LookupEnvOrString("CONFIG_SECRETNAME", configSecretName), "set name of managed secrets")
 	flag.StringVar(&configExcludedNamespaces, "excluded-namespaces", LookupEnvOrString("CONFIG_EXCLUDED_NAMESPACES", configExcludedNamespaces), "comma-separated namespaces excluded from processing")
+	flag.StringVar(&configDefaultServiceAccount, "default-serviceaccount", LookupEnvOrString("CONFIG_DEFAULT_SERVICEACCOUNT", configDefaultServiceAccount), "Name of the default service account to patch")
 	flag.Parse()
 
 	// setup logrus
@@ -152,7 +154,7 @@ func processServiceAccount(k8s *k8sClient, namespace string) error {
 		return fmt.Errorf("[%s] Failed to list service accounts: %v", namespace, err)
 	}
 	for _, sa := range sas.Items {
-		if !configAllServiceAccount && sa.Name != defaultServiceAccountName {
+		if !configAllServiceAccount && sa.Name != configDefaultServiceAccount {
 			log.Debugf("[%s] Skip non-default service account [%s]", namespace, sa.Name)
 			continue
 		}
