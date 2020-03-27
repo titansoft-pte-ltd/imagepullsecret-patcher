@@ -26,6 +26,7 @@ Below is a table of available configurations:
 | dockerconfigjson | CONFIG_DOCKERCONFIGJSON | -dockerconfigjson | "" | json credential for authenicating container registry |
 | secret name | CONFIG_SECRETNAME | -secretname | "image-pull-secret" | name of managed secrets |
 | excluded namespaces | CONFIG_EXCLUDED_NAMESPACES | -excluded-namespaces | "" | comma-separated namespaces excluded from processing |
+| serviceaccounts | CONFIG_SERVICEACCOUNTS | -serviceaccounts | "default" | comma-separated list of serviceaccounts to patch |
 
 And here are the annotations available:
 
