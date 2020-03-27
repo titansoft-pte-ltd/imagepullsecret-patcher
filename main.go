@@ -155,7 +155,7 @@ func processServiceAccount(k8s *k8sClient, namespace string) error {
 	}
 	for _, sa := range sas.Items {
 		if !configAllServiceAccount && stringNotInList(sa.Name, configServiceAccounts) {
-			log.Debugf("[%s] Skip non-default service account [%s]", namespace, sa.Name)
+			log.Debugf("[%s] Skip service account [%s]", namespace, sa.Name)
 			continue
 		}
 		if includeImagePullSecret(&sa, configSecretName) {
