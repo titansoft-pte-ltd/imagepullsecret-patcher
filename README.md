@@ -14,33 +14,34 @@ A blog post: https://medium.com/titansoft-engineering/kubernetes-cluster-wide-ac
 
 ## Installation and configuration
 
-To install imagepullsecret-patcher, can refer to [deploy-example](deploy-example) as a quick-start. 
+To install imagepullsecret-patcher, can refer to [deploy-example](deploy-example) as a quick-start.
 
 Below is a table of available configurations:
 
-| Config name | ENV | Command flag | Default value | Description |
-|-|-|-|-|-|
-| force | CONFIG_FORCE | -force | true | overwrite secrets when not match |
-| debug | CONFIG_DEBUG | -debug | false | show DEBUG logs |
-| all service account | CONFIG_ALLSERVICEACCOUNT | -allserviceaccount | false | if false, patch just default service account; if true, list and patch all service accounts |
-| dockerconfigjson | CONFIG_DOCKERCONFIGJSON | -dockerconfigjson | "" | json credential for authenicating container registry |
-| secret name | CONFIG_SECRETNAME | -secretname | "image-pull-secret" | name of managed secrets |
-| excluded namespaces | CONFIG_EXCLUDED_NAMESPACES | -excluded-namespaces | "" | comma-separated namespaces excluded from processing |
-| serviceaccounts | CONFIG_SERVICEACCOUNTS | -serviceaccounts | "default" | comma-separated list of serviceaccounts to patch |
+| Config name         | ENV                        | Command flag         | Default value       | Description                                                                                                                          |
+| ------------------- | -------------------------- | -------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| force               | CONFIG_FORCE               | -force               | true                | overwrite secrets when not match                                                                                                     |
+| debug               | CONFIG_DEBUG               | -debug               | false               | show DEBUG logs                                                                                                                      |
+| serviceaccounts     | CONFIG_SERVICEACCOUNTS     | -serviceaccounts     | "default"           | comma-separated list of serviceaccounts to patch                                                                                     |
+| all service account | CONFIG_ALLSERVICEACCOUNT   | -allserviceaccount   | false               | if false, patch just default service account; if true, list and patch all service accounts and ignore the -servicesaccounts argument |
+| dockerconfigjson    | CONFIG_DOCKERCONFIGJSON    | -dockerconfigjson    | ""                  | json credential for authenicating container registry                                                                                 |
+| secret name         | CONFIG_SECRETNAME          | -secretname          | "image-pull-secret" | name of managed secrets                                                                                                              |
+| excluded namespaces | CONFIG_EXCLUDED_NAMESPACES | -excluded-namespaces | ""                  | comma-separated namespaces excluded from processing                                                                                  |
 
 And here are the annotations available:
 
-| Annotation | Object | Description |
-|-|-|-|
+| Annotation                                        | Object    | Description                                                                                                       |
+| ------------------------------------------------- | --------- | ----------------------------------------------------------------------------------------------------------------- |
 | k8s.titansoft.com/imagepullsecret-patcher-exclude | namespace | If a namespace is set this annoation with "true", it will be excluded from processing by imagepullsecret-patcher. |
 
 ## Why
 
 To deploy private images to Kubernetes, we need to provide the credential to the private docker registries in either
+
 - Pod definition (https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod)
 - Default service account in a namespace (https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#add-imagepullsecrets-to-a-service-account)
 
-With the second approach, a Kubernetes cluster admin configures the default service accounts in each namespace, and a Pod deployed by developers automatically inherits the image-pull-secret from the default service account in Pod's namespace. 
+With the second approach, a Kubernetes cluster admin configures the default service accounts in each namespace, and a Pod deployed by developers automatically inherits the image-pull-secret from the default service account in Pod's namespace.
 
 This is done manually by following command for each Kubernetes namespace.
 
@@ -62,4 +63,5 @@ And it could be automated with a simple program like imagepullsecret-patcher.
 ## Contribute
 
 Development Environment
+
 - Go 1.13
