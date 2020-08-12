@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"testing"
+	"time"
 )
 
 var testCasesLookupEnvOrString = []struct {
@@ -130,6 +131,52 @@ func TestLookupEnvOrBool(t *testing.T) {
 		actual := LookUpEnvOrBool(testCase.lookupKey, testCase.defaultVal)
 		if actual != testCase.expected {
 			t.Errorf("LookupEnvOrBool(%s) gives %v, expects %v", testCase.name, actual, testCase.expected)
+		}
+	}
+}
+
+var testCasesLookupEnvOrDuration = []struct {
+	name       string
+	envs       map[string]string
+	defaultVal time.Duration
+	lookupKey  string
+	expected   time.Duration
+}{
+	{
+		name: "hit",
+		envs: map[string]string{
+			"TEST": "30s",
+		},
+		lookupKey:  "TEST",
+		defaultVal: 10 * time.Second,
+		expected:   30 * time.Second,
+	},
+	{
+		name: "miss",
+		envs: map[string]string{
+			"MISS": "30s",
+		},
+		lookupKey:  "TEST",
+		defaultVal: 10 * time.Second,
+		expected:   10 * time.Second,
+	},
+	{
+		name: "not a time duration",
+		envs: map[string]string{
+			"TEST": "no duration string",
+		},
+		lookupKey:  "TEST",
+		defaultVal: 10 * time.Second,
+		expected:   10 * time.Second,
+	},
+}
+
+func TestLookupEnvOrDuration(t *testing.T) {
+	for _, testCase := range testCasesLookupEnvOrDuration {
+		prepareEnvs(testCase.envs)
+		actual := LookupEnvOrDuration(testCase.lookupKey, testCase.defaultVal)
+		if actual != testCase.expected {
+			t.Errorf("LookupEnvOrDuration(%s) gives %v, expects %v", testCase.name, actual, testCase.expected)
 		}
 	}
 }

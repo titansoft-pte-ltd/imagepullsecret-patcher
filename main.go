@@ -23,6 +23,7 @@ var (
 	configSecretName         string = "image-pull-secret" // default to image-pull-secret
 	configExcludedNamespaces string = ""
 	configServiceAccounts    string = defaultServiceAccountName
+	configLoopDuration       time.Duration =  10 * time.Second
 )
 
 const (
@@ -42,6 +43,7 @@ func main() {
 	flag.StringVar(&configSecretName, "secretname", LookupEnvOrString("CONFIG_SECRETNAME", configSecretName), "set name of managed secrets")
 	flag.StringVar(&configExcludedNamespaces, "excluded-namespaces", LookupEnvOrString("CONFIG_EXCLUDED_NAMESPACES", configExcludedNamespaces), "comma-separated namespaces excluded from processing")
 	flag.StringVar(&configServiceAccounts, "serviceaccounts", LookupEnvOrString("CONFIG_SERVICEACCOUNTS", configServiceAccounts), "comma-separated list of serviceaccounts to patch")
+	flag.DurationVar(&configLoopDuration, "loop-duration", LookupEnvOrDuration("CONFIG_LOOP_DURATION", configLoopDuration), "String defining the loop duration")
 	flag.Parse()
 
 	// setup logrus
@@ -66,7 +68,7 @@ func main() {
 	for {
 		log.Debug("Loop started")
 		loop(k8s)
-		time.Sleep(10 * time.Second)
+		time.Sleep(configLoopDuration)
 	}
 }
 

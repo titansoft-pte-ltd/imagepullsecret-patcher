@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"strconv"
+	"time"
 )
 
 // Reference:
@@ -42,5 +43,21 @@ func LookUpEnvOrBool(key string, defaultVal bool) bool {
 	if err != nil {
 		return defaultVal
 	}
+	return val
+}
+
+// LookupEnvOrDuration lookup ENV string with given key and convert to time.Duration
+// or returns default value if not exists
+func LookupEnvOrDuration(key string, defaultVal time.Duration) time.Duration {
+	str, ok := os.LookupEnv(key)
+	if !ok {
+		return defaultVal
+	}
+
+	val, err :=time.ParseDuration(str)
+	if err != nil {
+		return defaultVal
+	}
+
 	return val
 }
