@@ -8,8 +8,8 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:
-    k8s-app: image-pull-secret-patcher
-  name: image-pull-secret-patcher
+    k8s-app: imagepullsecret-patcher
+  name: imagepullsecret-patcher
 rules:
 - apiGroups:
   - ""
@@ -37,7 +37,7 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: image-pull-secret-patcher
+  name: imagepullsecret-patcher
 subjects:
   - kind: ServiceAccount
     name: imagepullsecret-patcher
