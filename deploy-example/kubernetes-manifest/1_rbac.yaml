@@ -5,13 +5,39 @@ metadata:
   namespace: imagepullsecret-patcher
 ---
 apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    k8s-app: image-pull-secret-patcher
+  name: image-pull-secret-patcher
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  - serviceaccounts
+  verbs:
+  - list
+  - patch
+  - create
+  - get
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - list
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: imagepullsecret-patcher
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: cluster-admin
+  name: image-pull-secret-patcher
 subjects:
   - kind: ServiceAccount
     name: imagepullsecret-patcher
