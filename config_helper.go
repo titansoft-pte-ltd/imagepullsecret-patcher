@@ -54,7 +54,7 @@ func LookupEnvOrDuration(key string, defaultVal time.Duration) time.Duration {
 		return defaultVal
 	}
 
-	val, err :=time.ParseDuration(str)
+	val, err := time.ParseDuration(str)
 	if err != nil {
 		return defaultVal
 	}
