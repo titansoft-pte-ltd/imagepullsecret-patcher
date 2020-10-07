@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
@@ -71,5 +72,51 @@ func TestDockerconfigSecretIsValid(t *testing.T) {
 	result := verifySecret(dockerconfigSecret("default"))
 	if result != secretOk {
 		t.Errorf("dockerconfigSecret generates invalid secret: %s", result)
+	}
+}
+
+var validAnnotations = map[string]string{
+	annotationManagedBy: annotationAppName,
+}
+var testCasesForIsManagedSecret = []struct {
+	name     string
+	input    *corev1.Secret
+	expected bool
+}{
+	{
+		name: "valid",
+		input: &corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: validAnnotations,
+			},
+		},
+		expected: true,
+	},
+	{
+		name:     "no annotation",
+		input:    &corev1.Secret{},
+		expected: false,
+	},
+	{
+		name: "different annotation",
+		input: &corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{
+					"notmatching": "annotation",
+				},
+			},
+		},
+		expected: false,
+	},
+}
+
+func TestIsManagedSecret(t *testing.T) {
+	configDockerconfigjson = testDockerconfig
+	for _, testCase := range testCasesForIsManagedSecret {
+		actual := isManagedSecret(testCase.input)
+		t.Logf("+%v\n", testCase.input.ObjectMeta.Annotations)
+		if actual != testCase.expected {
+			t.Errorf("verifySecret(%s) gives %t, expects %t", testCase.name, actual, testCase.expected)
+		}
 	}
 }
