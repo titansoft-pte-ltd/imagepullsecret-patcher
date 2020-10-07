@@ -36,11 +36,12 @@ spec:
               value: "false"
             - name: CONFIG_ALLSERVICEACCOUNT
               value: "true"
-            - name: CONFIG_DOCKERCONFIGJSON
-              valueFrom:
-                secretKeyRef:
-                  name: image-pull-secret
-                  key: .dockerconfigjson
+            - name: CONFIG_DOCKERCONFIGJSONPATH
+              value: "/app/secrets/.dockerconfigjson"
+          volumeMounts:
+            - name: src_dockerconfigjson
+              mountPath: "/app/secrets"
+              readOnly: true
           resources:
             requests:
               cpu: 0.1
@@ -48,3 +49,6 @@ spec:
             limits:
               cpu: 0.2
               memory: 30Mi
+      volumes:
+        - name: src_dockerconfigjson
+          secret: image-pull-secret
