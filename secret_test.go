@@ -59,7 +59,7 @@ var testCasesVerifySecret = []struct {
 }
 
 func TestVerifySecret(t *testing.T) {
-	configDockerconfigjson = testDockerconfig
+	dockerConfigJSON = testDockerconfig
 	for _, testCase := range testCasesVerifySecret {
 		actual := verifySecret(testCase.input)
 		if actual != testCase.expected {
