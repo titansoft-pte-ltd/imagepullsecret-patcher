@@ -129,8 +129,7 @@ func processSecret(k8s *k8sClient, namespace string) error {
 		return fmt.Errorf("[%s] Failed to GET secret: %v", namespace, err)
 	} else {
 		if configManagedOnly && isManagedSecret(secret) {
-			log.Debugf("[%s] Secret is present but unmanaged", namespace)
-			return nil
+			return fmt.Errorf("[%s] Secret is present but unmanaged", namespace)
 		}
 		switch verifySecret(secret) {
 		case secretOk:
