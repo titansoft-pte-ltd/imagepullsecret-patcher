@@ -16,15 +16,19 @@ import (
 )
 
 var (
-	configForce              bool          = true
-	configDebug              bool          = false
-	configManagedOnly        bool          = false
-	configAllServiceAccount  bool          = false
-	configDockerconfigjson   string        = ""
-	configSecretName         string        = "image-pull-secret" // default to image-pull-secret
-	configExcludedNamespaces string        = ""
-	configServiceAccounts    string        = defaultServiceAccountName
-	configLoopDuration       time.Duration = 10 * time.Second
+	// Config
+	configForce                bool          = true
+	configDebug                bool          = false
+	configManagedOnly          bool          = false
+	configAllServiceAccount    bool          = false
+	configDockerconfigjson     string        = ""
+	configDockerConfigJSONPath string        = ""
+	configSecretName           string        = "image-pull-secret" // default to image-pull-secret
+	configExcludedNamespaces   string        = ""
+	configServiceAccounts      string        = defaultServiceAccountName
+	configLoopDuration         time.Duration = 10 * time.Second
+
+	dockerConfigJSON string
 )
 
 const (
@@ -41,7 +45,8 @@ func main() {
 	flag.BoolVar(&configManagedOnly, "managedonly", LookUpEnvOrBool("CONFIG_MANAGEDONLY", configManagedOnly), "only modify secrets which are annotated as managed by imagepullsecret")
 	flag.BoolVar(&configDebug, "debug", LookUpEnvOrBool("CONFIG_DEBUG", configDebug), "show DEBUG logs")
 	flag.BoolVar(&configAllServiceAccount, "allserviceaccount", LookUpEnvOrBool("CONFIG_ALLSERVICEACCOUNT", configAllServiceAccount), "if false, patch just default service account; if true, list and patch all service accounts")
-	flag.StringVar(&configDockerconfigjson, "dockerconfigjson", LookupEnvOrString("CONFIG_DOCKERCONFIGJSON", configDockerconfigjson), "json credential for authenicating container registry")
+	flag.StringVar(&configDockerconfigjson, "dockerconfigjson", LookupEnvOrString("CONFIG_DOCKERCONFIGJSON", configDockerconfigjson), "json credential for authenicating container registry, exclusive with `dockerconfigjsonpath`")
+	flag.StringVar(&configDockerConfigJSONPath, "dockerconfigjsonpath", LookupEnvOrString("CONFIG_DOCKERCONFIGJSONPATH", configDockerConfigJSONPath), "path to json file containing credentials for the registry to be distributed, exclusive with `dockerconfigjson`")
 	flag.StringVar(&configSecretName, "secretname", LookupEnvOrString("CONFIG_SECRETNAME", configSecretName), "set name of managed secrets")
 	flag.StringVar(&configExcludedNamespaces, "excluded-namespaces", LookupEnvOrString("CONFIG_EXCLUDED_NAMESPACES", configExcludedNamespaces), "comma-separated namespaces excluded from processing")
 	flag.StringVar(&configServiceAccounts, "serviceaccounts", LookupEnvOrString("CONFIG_SERVICEACCOUNTS", configServiceAccounts), "comma-separated list of serviceaccounts to patch")
@@ -53,6 +58,11 @@ func main() {
 		log.SetLevel(log.DebugLevel)
 	}
 	log.Info("Application started")
+
+	// Validate input, as both of these being configured would have undefined behavior.
+	if configDockerconfigjson != "" && configDockerConfigJSONPath != "" {
+		log.Panic(fmt.Errorf("Cannot specify both `configdockerjson` and `configdockerjsonpath`"))
+	}
 
 	// create k8s clientset from in-cluster config
 	config, err := rest.InClusterConfig()
@@ -75,6 +85,14 @@ func main() {
 }
 
 func loop(k8s *k8sClient) {
+	var err error
+
+	// Populate secret value to set
+	dockerConfigJSON, err = getDockerConfigJSON()
+	if err != nil {
+		log.Panic(err)
+	}
+
 	// get all namespaces
 	namespaces, err := k8s.clientset.CoreV1().Namespaces().List(metav1.ListOptions{})
 	if err != nil {

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"io/ioutil"
+
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -19,6 +21,17 @@ const (
 	secretDataNotMatch verifySecretResult = "SecretDataNotMatch"
 )
 
+// getDockerConfigJSON is a dynamic getter for our secret value. It lets us
+// dynamically fetch the value from file or return the hard coded value,
+// providing a consistent interface for access
+func getDockerConfigJSON() (string, error) {
+	if configDockerConfigJSONPath != "" {
+		b, ok := ioutil.ReadFile(configDockerConfigJSONPath)
+		return string(b), ok
+	}
+	return configDockerconfigjson, nil
+}
+
 func dockerconfigSecret(namespace string) *corev1.Secret {
 	return &corev1.Secret{
 		ObjectMeta: v1.ObjectMeta{
@@ -29,7 +42,7 @@ func dockerconfigSecret(namespace string) *corev1.Secret {
 			},
 		},
 		Data: map[string][]byte{
-			corev1.DockerConfigJsonKey: []byte(configDockerconfigjson),
+			corev1.DockerConfigJsonKey: []byte(dockerConfigJSON),
 		},
 		Type: corev1.SecretTypeDockerConfigJson,
 	}
@@ -43,7 +56,7 @@ func verifySecret(secret *corev1.Secret) verifySecretResult {
 	if !ok {
 		return secretNoKey
 	}
-	if string(b) != configDockerconfigjson {
+	if string(b) != dockerConfigJSON {
 		return secretDataNotMatch
 	}
 	return secretOk

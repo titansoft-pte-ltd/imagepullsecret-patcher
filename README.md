@@ -18,23 +18,30 @@ To install imagepullsecret-patcher, can refer to [deploy-example](deploy-example
 
 Below is a table of available configurations:
 
-| Config name         | ENV                        | Command flag         | Default value       | Description                                                                                                                       |
-| ------------------- | -------------------------- | -------------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| force               | CONFIG_FORCE               | -force               | true                | overwrite secrets when not match                                                                                                  |
-| debug               | CONFIG_DEBUG               | -debug               | false               | show DEBUG logs                                                                                                                   |
-| managedonly         | CONFIG_MANAGEDONLY         | -managedonly         | false               | only modify secrets which were created by imagepullsecret                                                                         |
-| serviceaccounts     | CONFIG_SERVICEACCOUNTS     | -serviceaccounts     | "default"           | comma-separated list of serviceaccounts to patch                                                                                  |
-| all service account | CONFIG_ALLSERVICEACCOUNT   | -allserviceaccount   | false               | if true, list and patch all service accounts and the `-servicesaccounts` argument is ignored                                      |
-| dockerconfigjson    | CONFIG_DOCKERCONFIGJSON    | -dockerconfigjson    | ""                  | json credential for authenicating container registry                                                                              |
-| secret name         | CONFIG_SECRETNAME          | -secretname          | "image-pull-secret" | name of managed secrets                                                                                                           |
-| excluded namespaces | CONFIG_EXCLUDED_NAMESPACES | -excluded-namespaces | ""                  | comma-separated namespaces excluded from processing                                                                               |
-| loop duration       | CONFIG_LOOP_DURATION       | -loop-duration       | 10 seconds          | duration string which defines how often namespaces are checked, see https://golang.org/pkg/time/#ParseDuration for more examples  |
+| Config name          | ENV                         | Command flag          | Default value       | Description                                                                                                                      |
+| -------------------- | --------------------------- | --------------------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| force                | CONFIG_FORCE                | -force                | true                | overwrite secrets when not match                                                                                                 |
+| debug                | CONFIG_DEBUG                | -debug                | false               | show DEBUG logs                                                                                                                  |
+| managedonly          | CONFIG_MANAGEDONLY          | -managedonly          | false               | only modify secrets which were created by imagepullsecret                                                                         |
+| serviceaccounts      | CONFIG_SERVICEACCOUNTS      | -serviceaccounts      | "default"           | comma-separated list of serviceaccounts to patch                                                                                 |
+| all service account  | CONFIG_ALLSERVICEACCOUNT    | -allserviceaccount    | false               | if true, list and patch all service accounts and the `-servicesaccounts` argument is ignored                                     |
+| dockerconfigjson     | CONFIG_DOCKERCONFIGJSON     | -dockerconfigjson     | ""                  | json credential for authenicating container registry                                                                             |
+| dockerconfigjsonpath | CONFIG_DOCKERCONFIGJSONPATH | -dockerconfigjsonpath | ""                  | path for of mounted json credentials for dynamic secret management                                                               |
+| secret name          | CONFIG_SECRETNAME           | -secretname           | "image-pull-secret" | name of managed secrets                                                                                                          |
+| excluded namespaces  | CONFIG_EXCLUDED_NAMESPACES  | -excluded-namespaces  | ""                  | comma-separated namespaces excluded from processing                                                                              |
+| loop duration        | CONFIG_LOOP_DURATION        | -loop-duration        | 10 seconds          | duration string which defines how often namespaces are checked, see https://golang.org/pkg/time/#ParseDuration for more examples |
 
 And here are the annotations available:
 
 | Annotation                                        | Object    | Description                                                                                                       |
 | ------------------------------------------------- | --------- | ----------------------------------------------------------------------------------------------------------------- |
 | k8s.titansoft.com/imagepullsecret-patcher-exclude | namespace | If a namespace is set this annotation with "true", it will be excluded from processing by imagepullsecret-patcher. |
+
+## Providing credentials
+
+You can provide the authentication credentials for imagepullsecret to populate across namespaces in a couple of ways.
+
+You can provide a raw secret as an environment variable, or better yet, by mounting a volume into the container. Mounted secrets can be dynamically updated and are more secure. Please see the relevant docs for more information https://kubernetes.io/docs/concepts/configuration/secret/
 
 ## Why
 
