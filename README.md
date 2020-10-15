@@ -22,6 +22,7 @@ Below is a table of available configurations:
 | ------------------- | -------------------------- | -------------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
 | force               | CONFIG_FORCE               | -force               | true                | overwrite secrets when not match                                                                                                  |
 | debug               | CONFIG_DEBUG               | -debug               | false               | show DEBUG logs                                                                                                                   |
+| managedonly         | CONFIG_MANAGEDONLY         | -managedonly         | false               | only modify secrets which were created by imagepullsecret                                                                         |
 | serviceaccounts     | CONFIG_SERVICEACCOUNTS     | -serviceaccounts     | "default"           | comma-separated list of serviceaccounts to patch                                                                                  |
 | all service account | CONFIG_ALLSERVICEACCOUNT   | -allserviceaccount   | false               | if true, list and patch all service accounts and the `-servicesaccounts` argument is ignored                                      |
 | dockerconfigjson    | CONFIG_DOCKERCONFIGJSON    | -dockerconfigjson    | ""                  | json credential for authenicating container registry                                                                              |
@@ -33,7 +34,7 @@ And here are the annotations available:
 
 | Annotation                                        | Object    | Description                                                                                                       |
 | ------------------------------------------------- | --------- | ----------------------------------------------------------------------------------------------------------------- |
-| k8s.titansoft.com/imagepullsecret-patcher-exclude | namespace | If a namespace is set this annoation with "true", it will be excluded from processing by imagepullsecret-patcher. |
+| k8s.titansoft.com/imagepullsecret-patcher-exclude | namespace | If a namespace is set this annotation with "true", it will be excluded from processing by imagepullsecret-patcher. |
 
 ## Why
 

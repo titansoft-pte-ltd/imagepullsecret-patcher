@@ -5,13 +5,27 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+type verifySecretResult string
+
+const (
+	// annotation constants
+	annotationManagedBy = "app.kubernetes.io/managed-by"
+	annotationAppName   = "imagepullsecret-patcher"
+
+	// result code for verifySecret
+	secretOk           verifySecretResult = "SecretOk"
+	secretWrongType    verifySecretResult = "SecretWrongType"
+	secretNoKey        verifySecretResult = "SecretNoKey"
+	secretDataNotMatch verifySecretResult = "SecretDataNotMatch"
+)
+
 func dockerconfigSecret(namespace string) *corev1.Secret {
 	return &corev1.Secret{
 		ObjectMeta: v1.ObjectMeta{
 			Name:      configSecretName,
 			Namespace: namespace,
 			Annotations: map[string]string{
-				"app.kubernetes.io/managed-by": "imagepullsecret-patcher",
+				annotationManagedBy: annotationAppName,
 			},
 		},
 		Data: map[string][]byte{
@@ -20,16 +34,6 @@ func dockerconfigSecret(namespace string) *corev1.Secret {
 		Type: corev1.SecretTypeDockerConfigJson,
 	}
 }
-
-type verifySecretResult string
-
-const (
-	// result code for verifySecret
-	secretOk           verifySecretResult = "SecretOk"
-	secretWrongType    verifySecretResult = "SecretWrongType"
-	secretNoKey        verifySecretResult = "SecretNoKey"
-	secretDataNotMatch verifySecretResult = "SecretDataNotMatch"
-)
 
 func verifySecret(secret *corev1.Secret) verifySecretResult {
 	if secret.Type != corev1.SecretTypeDockerConfigJson {
@@ -43,4 +47,13 @@ func verifySecret(secret *corev1.Secret) verifySecretResult {
 		return secretDataNotMatch
 	}
 	return secretOk
+}
+
+func isManagedSecret(secret *corev1.Secret) bool {
+	if k, ok := secret.ObjectMeta.Annotations[annotationManagedBy]; ok {
+		if k == annotationAppName {
+			return true
+		}
+	}
+	return false
 }

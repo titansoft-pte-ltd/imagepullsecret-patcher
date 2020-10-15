@@ -16,14 +16,15 @@ import (
 )
 
 var (
-	configForce              bool   = true
-	configDebug              bool   = false
-	configAllServiceAccount  bool   = false
-	configDockerconfigjson   string = ""
-	configSecretName         string = "image-pull-secret" // default to image-pull-secret
-	configExcludedNamespaces string = ""
-	configServiceAccounts    string = defaultServiceAccountName
-	configLoopDuration       time.Duration =  10 * time.Second
+	configForce              bool          = true
+	configDebug              bool          = false
+	configManagedOnly        bool          = false
+	configAllServiceAccount  bool          = false
+	configDockerconfigjson   string        = ""
+	configSecretName         string        = "image-pull-secret" // default to image-pull-secret
+	configExcludedNamespaces string        = ""
+	configServiceAccounts    string        = defaultServiceAccountName
+	configLoopDuration       time.Duration = 10 * time.Second
 )
 
 const (
@@ -37,6 +38,7 @@ type k8sClient struct {
 func main() {
 	// parse flags
 	flag.BoolVar(&configForce, "force", LookUpEnvOrBool("CONFIG_FORCE", configForce), "force to overwrite secrets when not match")
+	flag.BoolVar(&configManagedOnly, "managedonly", LookUpEnvOrBool("CONFIG_MANAGEDONLY", configManagedOnly), "only modify secrets which are annotated as managed by imagepullsecret")
 	flag.BoolVar(&configDebug, "debug", LookUpEnvOrBool("CONFIG_DEBUG", configDebug), "show DEBUG logs")
 	flag.BoolVar(&configAllServiceAccount, "allserviceaccount", LookUpEnvOrBool("CONFIG_ALLSERVICEACCOUNT", configAllServiceAccount), "if false, patch just default service account; if true, list and patch all service accounts")
 	flag.StringVar(&configDockerconfigjson, "dockerconfigjson", LookupEnvOrString("CONFIG_DOCKERCONFIGJSON", configDockerconfigjson), "json credential for authenicating container registry")
@@ -126,6 +128,10 @@ func processSecret(k8s *k8sClient, namespace string) error {
 	} else if err != nil {
 		return fmt.Errorf("[%s] Failed to GET secret: %v", namespace, err)
 	} else {
+		if configManagedOnly && isManagedSecret(secret) {
+			log.Debugf("[%s] Secret is present but unmanaged", namespace)
+			return nil
+		}
 		switch verifySecret(secret) {
 		case secretOk:
 			log.Debugf("[%s] Secret is valid", namespace)
