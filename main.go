@@ -59,8 +59,8 @@ func main() {
 	}
 	log.Info("Application started")
 
-	// Validate input, as both of these being configured would be surprising.
-	if configDockerconfigjson == "" && configDockerConfigJSONPath == "" {
+	// Validate input, as both of these being configured would have undefined behavior.
+	if configDockerconfigjson != "" && configDockerConfigJSONPath != "" {
 		log.Panic(fmt.Errorf("Cannot specify both `configdockerjson` and `configdockerjsonpath`"))
 	}
 
