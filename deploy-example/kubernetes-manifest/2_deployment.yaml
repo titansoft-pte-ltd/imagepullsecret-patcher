@@ -28,7 +28,7 @@ spec:
       serviceAccountName: imagepullsecret-patcher
       containers:
         - name: imagepullsecret-patcher
-          image: "quay.io/titansoft/imagepullsecret-patcher:v0.12"
+          image: "quay.io/titansoft/imagepullsecret-patcher:v0.13"
           env:
             - name: CONFIG_FORCE
               value: "true"
