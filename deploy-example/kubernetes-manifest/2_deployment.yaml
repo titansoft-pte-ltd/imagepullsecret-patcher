@@ -39,7 +39,7 @@ spec:
             - name: CONFIG_DOCKERCONFIGJSONPATH
               value: "/app/secrets/.dockerconfigjson"
           volumeMounts:
-            - name: src_dockerconfigjson
+            - name: src-dockerconfigjson
               mountPath: "/app/secrets"
               readOnly: true
           resources:
@@ -50,5 +50,6 @@ spec:
               cpu: 0.2
               memory: 30Mi
       volumes:
-        - name: src_dockerconfigjson
-          secret: image-pull-secret
+        - name: src-dockerconfigjson
+          secret: 
+            secretName: image-pull-secret
