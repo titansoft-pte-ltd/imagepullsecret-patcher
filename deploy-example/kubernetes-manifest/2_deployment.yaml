@@ -24,11 +24,11 @@ spec:
       labels:
         name: imagepullsecret-patcher
     spec:
-      automountServiceAccountToken: true
+      automountServiceAccountToken: trueß
       serviceAccountName: imagepullsecret-patcher
       containers:
         - name: imagepullsecret-patcher
-          image: "quay.io/titansoft/imagepullsecret-patcher:v0.13"
+          image: "quay.io/titansoft/imagepullsecret-patcher:v0.14"
           env:
             - name: CONFIG_FORCE
               value: "true"
