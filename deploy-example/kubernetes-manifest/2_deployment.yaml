@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Secret
 type: kubernetes.io/dockerconfigjson
 metadata:
-  name: image-pull-secret
+  name: image-pull-secret-src
   namespace: imagepullsecret-patcher
 data:
   .dockerconfigjson: eyJhdXRocyI6eyJnY3IuaW8iOnsicGFzc3dvcmQiOiJ7XCJhdXRoXCI6e1wiZ2NyLmlvXCI6e1widXNlcm5hbWVcIjpcIl9qc29uX2tleVwiLFwicGFzc3dvcmRcIjpcInt9XCJ9fX0iLCJ1c2VybmFtZSI6Il9qc29uX2tleSJ9fX0=
@@ -52,4 +52,4 @@ spec:
       volumes:
         - name: src-dockerconfigjson
           secret: 
-            secretName: image-pull-secret
+            secretName: image-pull-secret-src
