@@ -35,7 +35,7 @@ var (
 	configServiceAccounts      string        = defaultServiceAccountName
 	configUseInfromers         bool          = true
 	configLoopDuration         time.Duration = 10 * time.Second
-	configRunningInCluster     bool          = false
+	configRunningInCluster     bool          = true
 
 	dockerConfigJSON string
 )
@@ -62,7 +62,7 @@ func main() {
 	flag.StringVar(&configServiceAccounts, "serviceaccounts", LookupEnvOrString("CONFIG_SERVICEACCOUNTS", configServiceAccounts), "comma-separated list of serviceaccounts to patch")
 	flag.BoolVar(&configUseInfromers, "use-infromers", LookUpEnvOrBool("CONFIG_USE_INFROMERS", configUseInfromers), "if true, k8s informers to detect when new namespace is created and then it will run patching process, if false it runs in a loop for all namespaces")
 	flag.DurationVar(&configLoopDuration, "loop-duration", LookupEnvOrDuration("CONFIG_LOOP_DURATION", configLoopDuration), "String defining the loop duration")
-	flag.BoolVar(&configRunningInCluster, "runningincluser", LookUpEnvOrBool("CONFIG_RUNNING_IN_CLUSTER", configRunningInCluster), "if false, will use kubeconfig and current context to connect to k8s API")
+	flag.BoolVar(&configRunningInCluster, "running-in-cluster", LookUpEnvOrBool("CONFIG_RUNNING_IN_CLUSTER", configRunningInCluster), "if false, will use kubeconfig and current context to connect to k8s API")
 	flag.Parse()
 
 	// setup logrus
