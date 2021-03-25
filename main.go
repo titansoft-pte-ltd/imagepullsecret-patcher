@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -12,14 +13,18 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/homedir"
 )
 
 var (
 	// Config
 	configForce                bool          = true
-	configDebug                bool          = false
+	configDebug                bool          = true
 	configManagedOnly          bool          = false
 	configRunOnce              bool          = false
 	configAllServiceAccount    bool          = false
@@ -28,7 +33,9 @@ var (
 	configSecretName           string        = "image-pull-secret" // default to image-pull-secret
 	configExcludedNamespaces   string        = ""
 	configServiceAccounts      string        = defaultServiceAccountName
+	configUseInfromers         bool          = true
 	configLoopDuration         time.Duration = 10 * time.Second
+	configRunningInCluster     bool          = false
 
 	dockerConfigJSON string
 )
@@ -53,7 +60,9 @@ func main() {
 	flag.StringVar(&configSecretName, "secretname", LookupEnvOrString("CONFIG_SECRETNAME", configSecretName), "set name of managed secrets")
 	flag.StringVar(&configExcludedNamespaces, "excluded-namespaces", LookupEnvOrString("CONFIG_EXCLUDED_NAMESPACES", configExcludedNamespaces), "comma-separated namespaces excluded from processing")
 	flag.StringVar(&configServiceAccounts, "serviceaccounts", LookupEnvOrString("CONFIG_SERVICEACCOUNTS", configServiceAccounts), "comma-separated list of serviceaccounts to patch")
+	flag.BoolVar(&configUseInfromers, "use-infromers", LookUpEnvOrBool("CONFIG_USE_INFROMERS", configUseInfromers), "if true, k8s informers to detect when new namespace is created and then it will run patching process, if false it runs in a loop for all namespaces")
 	flag.DurationVar(&configLoopDuration, "loop-duration", LookupEnvOrDuration("CONFIG_LOOP_DURATION", configLoopDuration), "String defining the loop duration")
+	flag.BoolVar(&configRunningInCluster, "runningincluser", LookUpEnvOrBool("CONFIG_RUNNING_IN_CLUSTER", configRunningInCluster), "if false, will use kubeconfig and current context to connect to k8s API")
 	flag.Parse()
 
 	// setup logrus
@@ -66,12 +75,29 @@ func main() {
 	if configDockerconfigjson != "" && configDockerConfigJSONPath != "" {
 		log.Panic(fmt.Errorf("Cannot specify both `configdockerjson` and `configdockerjsonpath`"))
 	}
-
-	// create k8s clientset from in-cluster config
-	config, err := rest.InClusterConfig()
-	if err != nil {
-		log.Panic(err)
+	var config *rest.Config
+	var err error
+	if configRunningInCluster {
+		// create k8s config from in-cluster config
+		config, err = rest.InClusterConfig()
+		if err != nil {
+			log.Panic(err)
+		}
+	} else {
+		// create k8s config from local kubeconfig
+		var kubeconfig *string
+		var err error
+		if home := homedir.HomeDir(); home != "" {
+			kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
+		} else {
+			kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
+		}
+		config, err = clientcmd.BuildConfigFromFlags("", *kubeconfig)
+		if err != nil {
+			log.Panic(err)
+		}
 	}
+
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		log.Panic(err)
@@ -80,15 +106,63 @@ func main() {
 		clientset: clientset,
 	}
 
-	for {
-		log.Debug("Loop started")
-		loop(k8s)
-		if configRunOnce {
-			log.Info("Exiting after single loop per `CONFIG_RUNONCE`")
-			os.Exit(0)
-		}
-		time.Sleep(configLoopDuration)
+	// Populate secret value to set
+	dockerConfigJSON, err = getDockerConfigJSON()
+	if err != nil {
+		log.Panic(err)
 	}
+
+	if configUseInfromers {
+		log.Debug("Informer started")
+		startNamespaceWatcher(k8s)
+	} else {
+		for {
+			log.Debug("Loop started")
+			loop(k8s)
+			if configRunOnce {
+				log.Info("Exiting after single loop per `CONFIG_RUNONCE`")
+				os.Exit(0)
+			}
+			time.Sleep(configLoopDuration)
+		}
+	}
+}
+
+func startNamespaceWatcher(k8s *k8sClient) {
+	factory := informers.NewSharedInformerFactory(k8s.clientset, 0)
+	informer := factory.Core().V1().Namespaces().Informer()
+	stopper := make(chan struct{})
+	defer close(stopper)
+
+	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc: func(obj interface{}) {
+			var err error
+			ns := obj.(*corev1.Namespace)
+			namespace := ns.Name
+			log.Infof("[%s] Namespace discovered", namespace)
+			if namespaceIsExcluded(*ns) {
+				log.Infof("[%s] Namespace skipped", namespace)
+			}
+			log.Debugf("[%s] Start processing", namespace)
+			// for each namespace, make sure the dockerconfig secret exists
+			err = processSecret(k8s, namespace)
+			if err != nil {
+				// if has error in processing secret, should skip processing service account
+				log.Error(err)
+			}
+			// get default service account, and patch image pull secret if not exist
+			err = processServiceAccount(k8s, namespace)
+			if err != nil {
+				log.Error(err)
+			}
+
+		},
+		DeleteFunc: func(obj interface{}) {
+			ns := obj.(*corev1.Namespace)
+			log.Debug("Discovered deleted namespace: %s \n", ns.Name)
+		},
+	})
+	informer.Run(stopper)
 }
 
 func loop(k8s *k8sClient) {
