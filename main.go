@@ -159,7 +159,8 @@ func startNamespaceWatcher(k8s *k8sClient) {
 		},
 		DeleteFunc: func(obj interface{}) {
 			ns := obj.(*corev1.Namespace)
-			log.Debug("Discovered deleted namespace: %s \n", ns.Name)
+			namespace := ns.Name
+			log.Debugf("[%s] Namespace deleted", namespace)
 		},
 	})
 	informer.Run(stopper)
