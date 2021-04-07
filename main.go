@@ -157,22 +157,24 @@ func startNamespaceWatcher(k8s *k8sClient) {
 				}
 				if namespaceIsExcluded(*namespaceObj) {
 					log.Infof("[%s] Namespace skipped", namespaceObj.Name)
-				}
-				if namespaceObj.Status.Phase != "Terminating" {
-					log.Debugf("[%s] Start processing", namespace)
-					// for each namespace, make sure the dockerconfig secret exists
-					err = processSecret(k8s, namespace)
-					if err != nil {
-						// if has error in processing secret, should skip processing service account
-						log.Error(err)
-					}
-					// get default service account, and patch image pull secret if not exist
-					err = processServiceAccount(k8s, namespace)
-					if err != nil {
-						log.Error(err)
-					}
 				} else {
-					log.Debugf("[%s] namespace is in phase %s", namespace, namespaceObj.Status.Phase)
+					if namespaceObj.Status.Phase != "Terminating" {
+						log.Debugf("[%s] Start processing", namespace)
+						// for each namespace, make sure the dockerconfig secret exists
+						err = processSecret(k8s, namespace)
+						if err != nil {
+							// if has error in processing secret, should skip processing service account
+							log.Error(err)
+						} else {
+							// get default service account, and patch image pull secret if not exist
+							err = processServiceAccount(k8s, namespace)
+							if err != nil {
+								log.Error(err)
+							}
+						}
+					} else {
+						log.Debugf("[%s] namespace is in phase %s", namespace, namespaceObj.Status.Phase)
+					}
 				}
 			}
 		},
@@ -194,18 +196,20 @@ func startNamespaceWatcher(k8s *k8sClient) {
 			log.Debugf("[%s] Namespace discovered", namespace)
 			if namespaceIsExcluded(*ns) {
 				log.Infof("[%s] Namespace skipped", namespace)
-			}
-			log.Debugf("[%s] Start processing", namespace)
-			// for each namespace, make sure the dockerconfig secret exists
-			err = processSecret(k8s, namespace)
-			if err != nil {
-				// if has error in processing secret, should skip processing service account
-				log.Error(err)
-			}
-			// get default service account, and patch image pull secret if not exist
-			err = processServiceAccount(k8s, namespace)
-			if err != nil {
-				log.Error(err)
+			} else {
+				log.Debugf("[%s] Start processing", namespace)
+				// for each namespace, make sure the dockerconfig secret exists
+				err = processSecret(k8s, namespace)
+				if err != nil {
+					// if has error in processing secret, should skip processing service account
+					log.Error(err)
+				} else {
+					// get default service account, and patch image pull secret if not exist
+					err = processServiceAccount(k8s, namespace)
+					if err != nil {
+						log.Error(err)
+					}
+				}
 			}
 		},
 		DeleteFunc: func(obj interface{}) {
