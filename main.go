@@ -237,8 +237,11 @@ func startInformers(k8s *k8sClient) {
 			}
 		},
 	})
+	log.Info("Namespace informer started")
 	go namespaceInformer.Run(stopper)
+	log.Info("ServiceAccount informer started")
 	go serviceAccountInformer.Run(stopper)
+	log.Info("Secret informer started")
 	secretInformer.Run(stopper)
 }
 
