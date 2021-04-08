@@ -117,7 +117,7 @@ func main() {
 
 	if configUseInfromers {
 		log.Debug("Informer started")
-		startNamespaceWatcher(k8s)
+		startInformers(k8s)
 	} else {
 		for {
 			log.Debug("Loop started")
@@ -131,10 +131,11 @@ func main() {
 	}
 }
 
-func startNamespaceWatcher(k8s *k8sClient) {
+func startInformers(k8s *k8sClient) {
 	factory := informers.NewSharedInformerFactory(k8s.clientset, 0)
 	namespaceInformer := factory.Core().V1().Namespaces().Informer()
 	secretInformer := factory.Core().V1().Secrets().Informer()
+	serviceAccountInformer := factory.Core().V1().ServiceAccounts().Informer()
 	stopper := make(chan struct{})
 	defer close(stopper)
 
@@ -159,13 +160,14 @@ func startNamespaceWatcher(k8s *k8sClient) {
 					log.Infof("[%s] Namespace skipped", namespaceObj.Name)
 				} else {
 					if namespaceObj.Status.Phase != "Terminating" {
-						log.Debugf("[%s] Start processing", namespace)
+						log.Debugf("[%s] Start processing secret", namespace)
 						// for each namespace, make sure the dockerconfig secret exists
 						err = processSecret(k8s, namespace)
 						if err != nil {
 							// if has error in processing secret, should skip processing service account
 							log.Error(err)
 						} else {
+							log.Debugf("[%s] Start processing service account", namespace)
 							// get default service account, and patch image pull secret if not exist
 							err = processServiceAccount(k8s, namespace)
 							if err != nil {
@@ -197,18 +199,12 @@ func startNamespaceWatcher(k8s *k8sClient) {
 			if namespaceIsExcluded(*ns) {
 				log.Infof("[%s] Namespace skipped", namespace)
 			} else {
-				log.Debugf("[%s] Start processing", namespace)
+				log.Debugf("[%s] Start processing secret", namespace)
 				// for each namespace, make sure the dockerconfig secret exists
 				err = processSecret(k8s, namespace)
 				if err != nil {
 					// if has error in processing secret, should skip processing service account
 					log.Error(err)
-				} else {
-					// get default service account, and patch image pull secret if not exist
-					err = processServiceAccount(k8s, namespace)
-					if err != nil {
-						log.Error(err)
-					}
 				}
 			}
 		},
@@ -218,7 +214,31 @@ func startNamespaceWatcher(k8s *k8sClient) {
 			log.Debugf("[%s] Namespace deleted", namespace)
 		},
 	})
+	serviceAccountInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc: func(obj interface{}) {
+			// var err error
+			sa := obj.(*corev1.ServiceAccount)
+			serviceAccount := sa.Name
+			namespace := sa.Namespace
+			namespaceObj, err := k8s.clientset.CoreV1().Namespaces().Get(namespace, metav1.GetOptions{})
+			if err != nil {
+				log.Panic(err)
+			}
+			log.Debugf("[%s] ServiceAccount discovered in namespace %s", serviceAccount, sa.Namespace)
+			if namespaceIsExcluded(*namespaceObj) {
+				log.Infof("[%s] Namespace skipped", namespace)
+			} else {
+				log.Debugf("[%s] Start processing service account", namespace)
+				// get default service account, and patch image pull secret if not exist
+				err = processServiceAccount(k8s, namespace)
+				if err != nil {
+					log.Error(err)
+				}
+			}
+		},
+	})
 	go namespaceInformer.Run(stopper)
+	go serviceAccountInformer.Run(stopper)
 	secretInformer.Run(stopper)
 }
 
@@ -238,7 +258,7 @@ func loop(k8s *k8sClient) {
 			log.Infof("[%s] Namespace skipped", namespace)
 			continue
 		}
-		log.Debugf("[%s] Start processing", namespace)
+		log.Debugf("[%s] Start processing secret", namespace)
 		// for each namespace, make sure the dockerconfig secret exists
 		err = processSecret(k8s, namespace)
 		if err != nil {
@@ -247,6 +267,7 @@ func loop(k8s *k8sClient) {
 			continue
 		}
 		// get default service account, and patch image pull secret if not exist
+		log.Debugf("[%s] Start processing service account", namespace)
 		err = processServiceAccount(k8s, namespace)
 		if err != nil {
 			log.Error(err)
