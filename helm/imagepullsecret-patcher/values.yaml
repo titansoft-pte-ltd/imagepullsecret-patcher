@@ -1,0 +1,29 @@
+# number of replicas to run
+replicaCount: 1
+image:
+  # docker image
+  repository: quay.io/titansoft/imagepullsecret-patcher
+  # docker image tag
+  tag: v0.14
+  pullPolicy: IfNotPresent
+  pullSecrets: []
+dockerConfigJsonBase64Encoded: "REPLACE_ME"
+env:
+  #overwrite secrets when not match
+  CONFIG_FORCE: true
+  #show DEBUG logs
+  CONFIG_DEBUG: false
+  #only modify secrets which were created by imagepullsecret
+  CONFIG_MANAGEDONLY: false
+  #run the update loop once, allowing for cronjob scheduling if desired
+  CONFIG_RUNONCE: false
+  #comma-separated list of serviceaccounts to patch
+  CONFIG_SERVICEACCOUNTS: default
+  #if true, list and patch all service accounts and the `-servicesaccounts` argument is ignored
+  CONFIG_ALLSERVICEACCOUNT: true
+  #name of managed secrets
+  CONFIG_SECRETNAME: image-pull-secret
+  #comma-separated namespaces excluded from processing
+  CONFIG_EXCLUDED_NAMESPACES :
+  #duration string which defines how often namespaces are checked, see https://golang.org/pkg/time/#ParseDuration for more examples
+  CONFIG_LOOP_DURATION: 10s

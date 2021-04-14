@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ template "imagepullsecret-patcher.fullname" . }}-env
+data:
+  {{- range $key, $value := .Values.env }}
+  {{ printf "%s" $key | replace "." "_" | upper }}: {{ $value |toString | b64enc}}
+  {{- end }}

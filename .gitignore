@@ -16,3 +16,4 @@ imagepullsecret-patcher
 # vendor/
 .vscode/
 .DS_Store
+!helm/*

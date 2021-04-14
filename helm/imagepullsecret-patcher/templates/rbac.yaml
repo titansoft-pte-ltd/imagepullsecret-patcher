@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ template "imagepullsecret-patcher.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app: {{ template "imagepullsecret-patcher.fullname" . }}
+  name: {{ template "imagepullsecret-patcher.fullname" . }}
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+      - serviceaccounts
+    verbs:
+      - list
+      - patch
+      - create
+      - get
+      - delete
+  - apiGroups:
+      - ""
+    resources:
+      - namespaces
+    verbs:
+      - list
+      - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ template "imagepullsecret-patcher.fullname" . }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ template "imagepullsecret-patcher.fullname" . }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ template "imagepullsecret-patcher.fullname" . }}
+    namespace: {{ .Release.Namespace }}
