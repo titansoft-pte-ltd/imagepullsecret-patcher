@@ -4,7 +4,7 @@ metadata:
   name: {{ template "imagepullsecret-patcher.fullname" . }}
   labels:
     app: {{ template "imagepullsecret-patcher.fullname" . }}
-    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    chart: "{{ .Chart.Name }}"
     release: {{ .Release.Name }}
 spec:
   replicas: {{.Values.replicaCount}}

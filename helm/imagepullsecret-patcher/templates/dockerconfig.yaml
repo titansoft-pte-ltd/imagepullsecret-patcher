@@ -5,7 +5,7 @@ metadata:
   name: {{ template "imagepullsecret-patcher.fullname" . }}-dockerconfigjson
   labels:
     app: {{ template "imagepullsecret-patcher.fullname" . }}
-    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    chart: "{{ .Chart.Name }}"
     release: {{ .Release.Name }}
 data:
   .dockerconfigjson: {{.Values.dockerConfigJsonBase64Encoded}}
