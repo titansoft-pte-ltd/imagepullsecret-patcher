@@ -1,0 +1,6 @@
+apiVersion: v2
+description: imagepullsecret-patcher
+name: imagepullsecret-patcher
+version: 1.0.0
+maintainers:
+  - name: titansoft-pte-ltd

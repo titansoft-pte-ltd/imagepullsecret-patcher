@@ -1,0 +1,7 @@
+
+Thank you for installing {{ .Chart.Name }}.
+
+Your release is named {{ .Release.Name }}.
+
+Be careful {{ .Release.Name }} just patches the new serviceaccounts after {{.Values.env.CONFIG_LOOP_DURATION}}.
+If the pod will start earlier it will not use the desired imagepullsecrets.

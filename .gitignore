@@ -16,4 +16,10 @@ imagepullsecret-patcher
 # vendor/
 .vscode/
 .DS_Store
+
+#Helm Charts
+!charts/*
+
+#Idea files
+.idea/*
 !helm/*
