@@ -28,7 +28,7 @@ spec:
       serviceAccountName: imagepullsecret-patcher
       containers:
         - name: imagepullsecret-patcher
-          image: "quay.io/titansoft/imagepullsecret-patcher:v0.14"
+          image: "quay.io/titansoft/imagepullsecret-patcher:v0.15"
           env:
             - name: CONFIG_FORCE
               value: "true"
@@ -51,5 +51,5 @@ spec:
               memory: 30Mi
       volumes:
         - name: src-dockerconfigjson
-          secret: 
+          secret:
             secretName: image-pull-secret-src
