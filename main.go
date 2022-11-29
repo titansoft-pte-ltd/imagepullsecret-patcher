@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
@@ -64,7 +65,7 @@ func main() {
 
 	// Validate input, as both of these being configured would have undefined behavior.
 	if configDockerconfigjson != "" && configDockerConfigJSONPath != "" {
-		log.Panic(fmt.Errorf("Cannot specify both `configdockerjson` and `configdockerjsonpath`"))
+		log.Panic(fmt.Errorf("cannot specify both `configdockerjson` and `configdockerjsonpath`"))
 	}
 
 	// create k8s clientset from in-cluster config
@@ -101,7 +102,7 @@ func loop(k8s *k8sClient) {
 	}
 
 	// get all namespaces
-	namespaces, err := k8s.clientset.CoreV1().Namespaces().List(metav1.ListOptions{})
+	namespaces, err := k8s.clientset.CoreV1().Namespaces().List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		log.Panic(err)
 	}
@@ -143,9 +144,9 @@ func namespaceIsExcluded(ns corev1.Namespace) bool {
 }
 
 func processSecret(k8s *k8sClient, namespace string) error {
-	secret, err := k8s.clientset.CoreV1().Secrets(namespace).Get(configSecretName, metav1.GetOptions{})
+	secret, err := k8s.clientset.CoreV1().Secrets(namespace).Get(context.Background(), configSecretName, metav1.GetOptions{})
 	if errors.IsNotFound(err) {
-		_, err := k8s.clientset.CoreV1().Secrets(namespace).Create(dockerconfigSecret(namespace))
+		_, err := k8s.clientset.CoreV1().Secrets(namespace).Create(context.Background(), dockerconfigSecret(namespace), metav1.CreateOptions{})
 		if err != nil {
 			return fmt.Errorf("[%s] Failed to create secret: %v", namespace, err)
 		}
@@ -162,12 +163,12 @@ func processSecret(k8s *k8sClient, namespace string) error {
 		case secretWrongType, secretNoKey, secretDataNotMatch:
 			if configForce {
 				log.Warnf("[%s] Secret is not valid, overwritting now", namespace)
-				err = k8s.clientset.CoreV1().Secrets(namespace).Delete(configSecretName, &metav1.DeleteOptions{})
+				err = k8s.clientset.CoreV1().Secrets(namespace).Delete(context.Background(), configSecretName, metav1.DeleteOptions{})
 				if err != nil {
 					return fmt.Errorf("[%s] Failed to delete secret [%s]: %v", namespace, configSecretName, err)
 				}
 				log.Warnf("[%s] Deleted secret [%s]", namespace, configSecretName)
-				_, err = k8s.clientset.CoreV1().Secrets(namespace).Create(dockerconfigSecret(namespace))
+				_, err = k8s.clientset.CoreV1().Secrets(namespace).Create(context.Background(), dockerconfigSecret(namespace), metav1.CreateOptions{})
 				if err != nil {
 					return fmt.Errorf("[%s] Failed to create secret: %v", namespace, err)
 				}
@@ -181,7 +182,7 @@ func processSecret(k8s *k8sClient, namespace string) error {
 }
 
 func processServiceAccount(k8s *k8sClient, namespace string) error {
-	sas, err := k8s.clientset.CoreV1().ServiceAccounts(namespace).List(metav1.ListOptions{})
+	sas, err := k8s.clientset.CoreV1().ServiceAccounts(namespace).List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		return fmt.Errorf("[%s] Failed to list service accounts: %v", namespace, err)
 	}
@@ -198,7 +199,7 @@ func processServiceAccount(k8s *k8sClient, namespace string) error {
 		if err != nil {
 			return fmt.Errorf("[%s] Failed to get patch string: %v", namespace, err)
 		}
-		_, err = k8s.clientset.CoreV1().ServiceAccounts(namespace).Patch(sa.Name, types.StrategicMergePatchType, patch)
+		_, err = k8s.clientset.CoreV1().ServiceAccounts(namespace).Patch(context.Background(), sa.Name, types.StrategicMergePatchType, patch, metav1.PatchOptions{})
 		if err != nil {
 			return fmt.Errorf("[%s] Failed to patch imagePullSecrets to service account [%s]: %v", namespace, sa.Name, err)
 		}

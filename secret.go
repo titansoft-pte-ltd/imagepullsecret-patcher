@@ -1,7 +1,7 @@
 package main
 
 import (
-	"io/ioutil"
+	"os"
 
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -26,7 +26,7 @@ const (
 // providing a consistent interface for access
 func getDockerConfigJSON() (string, error) {
 	if configDockerConfigJSONPath != "" {
-		b, ok := ioutil.ReadFile(configDockerConfigJSONPath)
+		b, ok := os.ReadFile(configDockerConfigJSONPath)
 		return string(b), ok
 	}
 	return configDockerconfigjson, nil
