@@ -24,7 +24,6 @@ spec:
       labels:
         name: imagepullsecret-patcher
     spec:
-      automountServiceAccountToken: true
       serviceAccountName: imagepullsecret-patcher
       containers:
         - name: imagepullsecret-patcher
@@ -42,6 +41,9 @@ spec:
             - name: src-dockerconfigjson
               mountPath: "/app/secrets"
               readOnly: true
+            - name: sa-token
+              mountPath: "/var/run/secrets/kubernetes.io/serviceaccount"
+              readOnly: true
           resources:
             requests:
               cpu: 0.1
@@ -51,5 +53,10 @@ spec:
               memory: 30Mi
       volumes:
         - name: src-dockerconfigjson
-          secret: 
+          secret:
             secretName: image-pull-secret-src
+        - name: sa-token
+          projected:
+            sources:
+              - serviceAccountToken:
+                  path: token

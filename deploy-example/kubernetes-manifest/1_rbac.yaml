@@ -3,6 +3,8 @@ kind: ServiceAccount
 metadata:
   name: imagepullsecret-patcher
   namespace: imagepullsecret-patcher
+  annotations:
+    kubernetes.io/service-account.name: imagepullsecret-patcher-token
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
