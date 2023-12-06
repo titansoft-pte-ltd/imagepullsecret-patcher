@@ -3,8 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/panjf2000/ants/v2"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -107,11 +109,19 @@ func loop(k8s *k8sClient) {
 	}
 	log.Debugf("Got %d namespaces", len(namespaces.Items))
 
-	for _, ns := range namespaces.Items {
+	// the pool sizes means how many goroutines should be used to process tasks in parallel.
+	poolSize := 10
+	// Use the pool with a function,
+	var wg sync.WaitGroup
+	p, _ := ants.NewPoolWithFunc(poolSize, func(namespaceInstance interface{}) {
+
+		defer wg.Done()
+
+		ns := namespaceInstance.(corev1.Namespace)
 		namespace := ns.Name
 		if namespaceIsExcluded(ns) {
 			log.Infof("[%s] Namespace skipped", namespace)
-			continue
+			return
 		}
 		log.Debugf("[%s] Start processing", namespace)
 		// for each namespace, make sure the dockerconfig secret exists
@@ -119,14 +129,24 @@ func loop(k8s *k8sClient) {
 		if err != nil {
 			// if has error in processing secret, should skip processing service account
 			log.Error(err)
-			continue
+			return
 		}
 		// get default service account, and patch image pull secret if not exist
 		err = processServiceAccount(k8s, namespace)
 		if err != nil {
 			log.Error(err)
 		}
+
+	})
+	defer p.Release()
+
+	// Submit tasks to process each namespace in parallel
+	for i := 0; i < len(namespaces.Items); i++ {
+		wg.Add(1)
+		_ = p.Invoke(namespaces.Items[i])
 	}
+	wg.Wait()
+
 }
 
 func namespaceIsExcluded(ns corev1.Namespace) bool {
