@@ -16,3 +16,5 @@ imagepullsecret-patcher
 # vendor/
 .vscode/
 .DS_Store
+
+.idea
